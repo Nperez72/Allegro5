@@ -8,7 +8,7 @@ struct Bitmap{
 	ALLEGRO_COLOR color;
 };
 
-void create_bitmap(ALLEGRO_BITMAP* bitmap,ALLEGRO_DISPLAY* display);
+void create_ship_bitmap(ALLEGRO_BITMAP* bitmap,ALLEGRO_DISPLAY* display);
 
 int main() {
 
@@ -28,9 +28,9 @@ int main() {
 	}
 	al_init_primitives_addon();
 
-    ALLEGRO_BITMAP* bitmap = al_create_bitmap(64,64);
+    ALLEGRO_BITMAP* ship = al_create_bitmap(64,64);
 
-	// Bitmap will need movement in the future so keyobard input is required
+	// Bitmap will need movement in the future so keyboard input is required
 	ALLEGRO_EVENT_QUEUE* event_queue = al_create_event_queue();
 	ALLEGRO_EVENT event;
 	if(!event_queue) {
@@ -40,57 +40,57 @@ int main() {
 	al_install_keyboard();
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
 
-	create_bitmap(bitmap, display);
+	create_ship_bitmap(ship, display);
 
     while(true) {
         al_clear_to_color(al_map_rgb(0, 0, 0));
-        al_draw_bitmap(bitmap, 100, 100, 0);
+        // Draw ship at center of screen
+        al_draw_bitmap(ship, 400, 300, 0);
+		// Swap buffers to display the drawn content
         al_flip_display();
         al_wait_for_event(event_queue, &event);
 	}
 
     // Clean up game objects upon exit
 	al_destroy_event_queue(event_queue);
-	al_destroy_bitmap(bitmap);
+	al_destroy_bitmap(ship);
 	al_destroy_event_queue(event_queue);
 
 }
 
-void create_bitmap(ALLEGRO_BITMAP* bitmap, ALLEGRO_DISPLAY* display) {
+void create_ship_bitmap(ALLEGRO_BITMAP* bitmap, ALLEGRO_DISPLAY* display) {
     al_set_target_bitmap(bitmap);
 
-    ALLEGRO_COLOR colors[3] = {
-        al_map_rgb(255, 50, 50),   // Red
-        al_map_rgb(50, 255, 50),   // Green
-        al_map_rgb(50, 50, 255)    // Blue
+    ALLEGRO_COLOR colors[4] = {
+        al_map_rgb(80, 180, 255),    // Body (light blue)
+        al_map_rgb(200, 200, 255),   // Cockpit (light gray/blue)
+        al_map_rgb(60, 60, 120),     // Wing (dark blue)
+        al_map_rgb(50, 220, 80)     //  Blaster (light green)
     };
 
-    // Define each indicvual primtive within the bitmap
-    Bitmap prims[4] = {
-        { 4, 4, colors[0] },    // Rectangle
-        { 48, 12, colors[1] },  // Circle
-        { 0, 63, colors[2] },   // Line start
-        { 32, 40, colors[0] }   // Triangle
-    };
+    al_clear_to_color(al_map_rgb(0, 0, 0)); 
 
-    al_clear_to_color(al_map_rgb(0, 0, 0));
+    // Define ship parts using Bitmap struct
+    Bitmap body = { 32, 4,  colors[0] }; 
+    Bitmap leftWing = { 12, 32, colors[2] };
+    Bitmap rightWing = { 52, 32, colors[2] };
+    Bitmap cockpit = { 32, 24, colors[1] };
+    Bitmap blaster = { 32, 8,  colors[3] };
 
-	// Draw first primitive
-    al_draw_filled_rectangle(prims[0].x, prims[0].y, prims[0].x + 20, prims[0].y + 20, prims[0].color);
+	// Draw main body (facing upwards)
+    al_draw_filled_triangle(body.x, body.y, 60, 56, 4, 56, body.color);
 
-	// Draw second primitive
-    al_draw_filled_circle(prims[1].x, prims[1].y, 10, prims[1].color);
+    // Draw left wing
+    al_draw_filled_triangle(leftWing.x, leftWing.y, 4, 56, 24, 56, leftWing.color);
 
-	// Draw third primitive
-    al_draw_line(prims[2].x, prims[2].y, 63, 0, prims[2].color, 2.0);
+    // Draw right wing
+    al_draw_filled_triangle(rightWing.x, rightWing.y, 60, 56, 40, 56, rightWing.color);
 
-	// Draw last primitive
-    al_draw_filled_triangle(
-        prims[3].x, prims[3].y,
-        60, 60,
-        10, 60,
-        prims[3].color
-    );
+    // Draw cockpit
+    al_draw_filled_ellipse(cockpit.x, cockpit.y, 8, 12, cockpit.color);
+
+    // Draw blaster (small circle at tip)
+    al_draw_filled_circle(blaster.x, blaster.y, 3, blaster.color);
 
     al_set_target_backbuffer(display);
 }
